@@ -10,7 +10,7 @@ there's a growing sense that ai writes too much slop code. i agree. i don't want
 
 **pstack gives you fearless parallelism.** when you can go deep on one agent and trust it to write good, verifiable code, you can truly parallelize with confidence. start multiple agents up with `poteto-mode` and trust that they'll apply rigorous engineering principles to their work.
 
-**ZCode runs every subagent on the session model.** the multi-model routing of the original becomes routing by subagent type: a reviewer type reads a diff differently than an architect type or a general-purpose delegate, and the panels fan out across those postures. `[`/setup-pstack`](./skills/setup-pstack/SKILL.md) maps every role to a type.
+**ZCode runs every subagent on the session model.** the multi-model routing of the original becomes routing by subagent type: a reviewer type reads a diff differently than an architect type or a general-purpose delegate, and the panels fan out across those postures. [`/setup-pstack`](./skills/setup-pstack/SKILL.md) maps every role to a type.
 
 fork it. improve it. make it yours. PRs are welcome! 
 
@@ -23,6 +23,12 @@ this repository doubles as a local ZCode marketplace. in ZCode:
 3. install **pstack**.
 
 (if you publish this repo to GitHub, you can add it as a GitHub marketplace instead.)
+
+## runtime prerequisites
+
+- **gh** (GitHub CLI): PR status, review replies, and the shipping flows all drive it.
+- **bun**: runs the scripts under `skills/poteto-mode/scripts/` (`orch`, `watch-pr`); `bun install && bun test` there verifies them.
+- **gt** (Graphite CLI): only the stacked-PR playbooks (`shipping`, `autopilot-stack`, `orchestrate`) need it. install it with `brew install withgraphite/tap/graphite`, then authenticate with `gt auth`. without `gt` those playbooks are inert; everything else works.
 
 ## get started
 

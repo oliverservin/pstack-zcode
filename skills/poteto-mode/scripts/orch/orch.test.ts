@@ -120,6 +120,12 @@ async function withFakeGt<T>({
     gt,
     `#!/usr/bin/env bash
 set -euo pipefail
+case "$*" in
+  "--version")
+    printf 'gt 0.0.0-test\\n'
+    exit 0
+    ;;
+esac
 if [ "$(pwd -P)" != "${realpathSync(join(directory, "repo"))}" ]; then
   printf 'gt ran outside the fixture repo: %s\\n' "$(pwd -P)" >&2
   exit 2

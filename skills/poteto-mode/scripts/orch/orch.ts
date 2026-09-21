@@ -1,9 +1,11 @@
 #!/usr/bin/env bun
 
+import { execFileSync } from "node:child_process";
 import { ensureDependenciesInstalled } from "../bootstrap.ts";
 import {
   NotFoundError,
   UsageError,
+  UserError,
   openStore,
   parseVerdict,
   type Counts,
@@ -214,6 +216,18 @@ function frontierRepo(options: FrontierSetOptions): string {
     throw new UsageError("set --repo <dir> or ORCH_REPO");
   }
   return value;
+}
+
+function ensureGt(): void {
+  try {
+    execFileSync("gt", ["--version"], {
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+  } catch (error) {
+    throw new UserError(
+      `gt (Graphite CLI) is not installed or not runnable (${message(error)}); install it (brew install withgraphite/tap/graphite, then gt auth) or avoid the stacked-PR commands`
+    );
+  }
 }
 
 async function runStore<T>(
@@ -486,18 +500,16 @@ function createProgram(io: Io): Command {
       "optional expected pull request order pin",
       prList
     )
-    .action((options: FrontierSetOptions) =>
-      runStore(
+    .action((options: FrontierSetOptions) => {
+      const repo = frontierRepo(options);
+      ensureGt();
+      return runStore(
         program,
         io,
-        (store) =>
-          store.frontier.set({
-            repo: frontierRepo(options),
-            prs: options.prs,
-          }),
+        (store) => store.frontier.set({ repo, prs: options.prs }),
         frontierLine
-      )
-    );
+      );
+    });
   leaf(frontier, "show", "show the frontier").action(() =>
     runStore(program, io, (store) => store.frontier.show(), frontierLine)
   );

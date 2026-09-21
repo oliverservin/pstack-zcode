@@ -37,6 +37,9 @@ REPLACEMENTS = [
     ("**create-skill** skill (Cursor's built-in for authoring SKILL.md files)",
      "**skill-creator** skill (from the `skill-creator` plugin, for authoring SKILL.md files)"),
     ("`/create-skill`", "`/skill-creator`"),
+    ("propose `new skill via create-skill:`", "propose `new skill via skill-creator:`"),
+    ("draft a new skill via create-skill", "draft a new skill via skill-creator"),
+    ("new skill via create-skill:", "new skill via skill-creator:"),
     # cloud agents -> background subagents
     ("One Cursor cloud agent per PR", "One background subagent per PR"),
     ("Cursor cloud agent", "background subagent"),
