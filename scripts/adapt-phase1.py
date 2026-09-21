@@ -43,6 +43,29 @@ REPLACEMENTS = [
     # Slack actions
     ("configured Cursor Slack actions", "configured Slack MCP tools"),
     ("Prefer configured Cursor Slack actions", "Prefer configured Slack MCP tools"),
+    # 0.15.2: multi-phase-plan skeleton and playbooks
+    ("and an explicit model per the Subagents section", "and an explicit subagent type per the Subagents section"),
+    ("Ten lanes on `grok-4.6-fast-xhigh` at the PR head", "Ten background lanes at the PR head"),
+    ("Browser, Electron, and web UIs use `control-ui` from `cursor-team-kit`. CLIs and TUIs use `control-cli` from `cursor-team-kit`.",
+     "Browser, Electron, and web UIs use the `control-browser` skill from the `browser-use` plugin. CLIs and TUIs run in a shell, reading the real output."),
+    ("Each live lane runs on its own cloud VM at the PR head. Drive through `control-ui` or `control-cli` from `cursor-team-kit`.",
+     "Each live lane runs as its own background subagent at the PR head. Drive browser and web surfaces with the `browser-use` plugin's `control-browser` skill, CLIs in a shell."),
+    ("In a local session, a real terminal `/loop`. In a cloud root, a cloud-sleeper wake chain. Never leave the cadence to memory.",
+     "A scheduled automation (Cron) that re-fires the tick prompt. Never leave the cadence to memory."),
+    ("arm a `/goal` with this exact text", "write the standing orders with this exact text"),
+    ("the execution playbook from trunk and the armed /goal", "the execution playbook from the plugin root and the standing orders"),
+    ("- [ ] Read these from trunk at program start. Re-read them at every tick.",
+     "- [ ] Read these from the installed pstack copy (under `~/.zcode/cli/plugins/cache/`) at program start. Re-read them at every tick."),
+    ("`git show origin/main:pstack/", "`<pstack plugin root>/"),
+    ("Run `node pstack/skills/poteto-mode/scripts/check-plan.mjs <plan.md>`",
+     "Run `node skills/poteto-mode/scripts/check-plan.mjs <plan.md>` from the pstack plugin root"),
+    ("The program runs `pstack/skills/poteto-mode/playbooks/", "The program runs the pstack plugin's `skills/poteto-mode/playbooks/"),
+    ("run the swarm per `pstack/skills/swarm/SKILL.md`", "run the swarm per `skills/swarm/SKILL.md` from the plugin root"),
+    ("`pstack/skills/", "`skills/"),
+    ("Run `/deslop` before each commit", "Run the **unslop** skill over the diff before each commit"),
+    ("Triage every Bugbot and security-reviewer comment per", "Triage every review-bot and security-reviewer comment per"),
+    ("- [ ] Bugbot triage done.", "- [ ] Review-bot triage done."),
+    ("of the change on a lane VM", "of the change on a lane instance"),
 ]
 
 
