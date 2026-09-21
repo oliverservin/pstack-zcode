@@ -120,3 +120,9 @@ LAST_CHAT = "unknown" + nota no stderr; nenhum path inventado);
 "runtime prerequisites" no README (gh, bun, gt); checagem de presença do `gt`
 no `orch.ts` (`frontier set`) antes de qualquer shell-out, com mensagem clara.
 Versão `0.15.2-zcode.1`; marketplace renomeado `pstack-zcode` (owner oliverservin).
+
+Pós-sync (mesma data): a degradação "diversidade de modelo não sobrevive" foi
+refinada. O `Agent` tool não escolhe modelo, mas workflows dinâmicos aceitam
+`subagent_model` por run (enumere com `ListModels`); `arena` ganhou a variante
+"Model bakeoff": um workflow por modelo concorrente, mesmo prompt/rubrica/paths,
+pick/graft normais entre runs. Arena de tipos continua o default.

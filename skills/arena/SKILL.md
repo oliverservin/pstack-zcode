@@ -25,7 +25,7 @@ The N candidates will receive the same prompt, so the prompt is the contract.
 
 1. State the artifact each candidate is producing.
 2. Derive the rubric. State what success looks like for *this* task, then turn it into 3-6 concrete gradeable criteria. The rubric is the picker's tool in Phase D. Candidates only see the task.
-3. Pick the runners. Use `arena runners` from `~/.zcode/pstack-roles.md` when present. Otherwise default to one each on `poteto-agent`, `code-reviewer`, `code-architect`, `general-purpose`. Spawn more when the arena covers multiple design directions. Repeat a type when the work is generation-bound rather than judgment-sensitive.
+3. Pick the runners. Use `arena runners` from `~/.zcode/pstack-roles.md` when present. Otherwise default to one each on `poteto-agent`, `code-reviewer`, `code-architect`, `general-purpose`. Spawn more when the arena covers multiple design directions. Repeat a type when the work is generation-bound rather than judgment-sensitive. This is a type arena; when the user asks for a model bakeoff instead, use the variant below.
 4. Assign output paths. Each candidate writes to its own location (a git worktree where possible, otherwise `/tmp/arena-<slug>/candidate-<n>/`), per the **separate-before-serializing-shared-state** principle skill.
 
 ## Phase B: Fan out
@@ -65,6 +65,12 @@ When N candidates converge on the same shape, that is a strong agreement signal.
 The synthesized artifact has to hold up under the same scrutiny as any other output, per the **prove-it-works** principle skill.
 
 If verification surfaces a problem the arena did not catch, either Phase A was wrong (re-frame and re-run) or one candidate caught it and you missed the graft (go back to Phase E). Don't paper over.
+
+## Model bakeoff variant
+
+The default arena diversifies perspective through subagent types, because the `Agent` tool cannot pick a model. Dynamic workflows can. When the user asks for a model bakeoff, list the host's models with `ListModels`, then run one workflow per contestant model with `subagent_model` set to it. `subagent_model` applies to a whole run, so N models means N runs and every candidate inside a run shares that model. Keep the task prompt, rubric, and output paths identical across runs, then pick and graft across runs as normal. The cross-judge may run as its own workflow on a model that did not produce the base.
+
+Name the diversity honestly before running. When the host lists one model, a model bakeoff does not exist and the type arena is the only arena. When the contestants are one model's tiers rather than different families, say so; the user may still prefer the type arena.
 
 ## Outputs
 
