@@ -91,3 +91,32 @@ different subagent type".
   `^[a-z0-9][a-z0-9._-]{0,127}$`, campos `skills`/`agents`).
 - Estrutura de skills: todo `skills/*/SKILL.md` com frontmatter `name`+`description`,
   `name` igual ao diretório em kebab-case.
+
+## Sync 0.15.2 (2026-09-21)
+
+Delta upstream 0.14.1 → 0.15.2: 94 M, 5 A (`assets/logo.png`, `make-bot-ui`,
+`principle-attack-the-premise`, `principle-test-behavior-not-implementation`,
+`scripts/check-plan.mjs`), 3 D (`how/references/critic-prompt.md`,
+`critique-rubric.md`, `poteto-mode/references/plan.md` — Critique mode e plan.md
+saem; seguido o novo shape, nada ressuscitado).
+
+Abordagem: sync puro primeiro (commit próprio), depois os codemods
+`adapt-phase1.py`/`adapt-phase2a.py` — estendidos com ~30 entradas novas para
+strings do 0.15.2 (control-ui/control-cli, `/loop`, `/goal`, grok slug,
+create-skill, linguagem de "model family") — e merge de 3 vias por arquivo
+(base `3d2fea8` / porta `295921e` / upstream 0.15.2) com resolução manual dos
+hotspots: Subagents do poteto-mode, setup-pstack (mantido o design
+tipo-por-papel + incorporado o budget ask do upstream como registro de
+reasoning, sem retratar modelos), README, how, e os playbooks reescritos
+upstream (shipping/babysit/opening-a-pr/autopilot-* agora abstraem forge
+"Origin"; mantida a abstração, adaptados cloud agent/deslop/loop).
+`make-bot-ui` adaptado com split honesto: backend webhook (Cursor) vs log local
++ automação Cron (ZCode, sem webhook). `check-plan.mjs` com markers sincronizados
+ao skeleton adaptado (valida com 0 problemas).
+
+Fixes de auditoria: `worktree-audit.sh` ganha `PSTACK_TRANSCRIPTS_DIR` (sem ele,
+LAST_CHAT = "unknown" + nota no stderr; nenhum path inventado);
+`create-skill` → `skill-creator` em automate-me e reflect/synthesizer; seção
+"runtime prerequisites" no README (gh, bun, gt); checagem de presença do `gt`
+no `orch.ts` (`frontier set`) antes de qualquer shell-out, com mensagem clara.
+Versão `0.15.2-zcode.1`; marketplace renomeado `pstack-zcode` (owner oliverservin).
