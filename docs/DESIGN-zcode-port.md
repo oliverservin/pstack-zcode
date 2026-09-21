@@ -1,128 +1,80 @@
-# pstack → ZCode port — design
+# pstack → ZCode port: design
 
-Data: 2026-08-20
-Fonte: [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/main/pstack) v0.14.1, MIT, de Lauren Tan (poteto).
-Baseline pristine commitado antes de qualquer mudança (ver git history).
+Date: 2026-08-20. Translated to English on 2026-09-21.
+Source: [cursor/plugins/pstack](https://github.com/cursor/plugins/tree/main/pstack) v0.14.1, MIT, by Lauren Tan (poteto).
+A pristine baseline was committed before any change (see the git history).
 
-## Objetivo
+## Goal
 
-Ter o pstack inteiro — 41 skills (~20 de workflow + 21 `principle-*`), 22 playbooks
-roteados por `/poteto-mode`, 2 subagentes (`poteto-agent`, `comment-sicko`), scripts
-CLI (orch/watch-pr, bun + TypeScript) e o pacote de automações "benny" — instalável
-e funcional como plugin do ZCode.
+Ship the whole of pstack as a working ZCode plugin. That means 41 skills (about 20 workflow skills plus 21 `principle-*`), 22 playbooks routed by `/poteto-mode`, 2 subagents (`poteto-agent`, `comment-sicko`), the CLI scripts (orch and watch-pr, bun plus TypeScript), and the "benny" automation package.
 
-## Abordagem escolhida: fork com camada de adaptação
+## Chosen approach: fork with an adaptation layer
 
-Copia-se o plugin inteiro e adapta-se tudo que é específico do Cursor, mantendo o
-`.cursor-plugin/` intacto (o fork continua instalável no Cursor; mesmo padrão
-multi-harness do superpowers). Adiciona-se `.zcode-plugin/plugin.json` e um
-`marketplace.json` na raiz para instalação via marketplace local.
+Copy the entire plugin and adapt everything Cursor-specific. Keep `.cursor-plugin/` untouched, so the fork still installs in Cursor. This is the same multi-harness pattern superpowers uses. Add `.zcode-plugin/plugin.json` and a root `marketplace.json` for installation through a local marketplace.
 
-Alternativas descartadas:
+Rejected alternatives:
 
-1. **Núcleo curado** (só poteto-mode + skills principais) — descartada: o pedido foi
-   o plugin completo; perderia arena/swarm/interrogate/reflect, que são a máquina de
-   paralelismo do pstack.
-2. **Skills soltas em `~/.agents/skills/`** — descartada: sem manifesto de plugin não
-   há contribuição de agentes (`poteto-agent`, `comment-sicko` viram `subagent_type`
-   apenas via plugin) nem história de instalação/updates.
+1. **Curated core** (poteto-mode plus the main skills only). Rejected because the request was the full plugin, and it would lose arena, swarm, interrogate, and reflect, which are pstack's parallelism machinery.
+2. **Loose skills in `~/.agents/skills/`**. Rejected because without a plugin manifest there is no agent contribution (`poteto-agent` and `comment-sicko` become `subagent_type`s only through a plugin) and no install or update history.
 
-## Mapeamento de conceitos Cursor → ZCode
+## Cursor → ZCode concept mapping
 
 | Cursor | ZCode |
 |---|---|
-| `Task` tool com `subagent_type` + `model` | `Agent` tool com `subagent_type` (sem `model`) |
-| Roteamento multi-modelo por papel (sol/grok/fable/opus) | Roteamento por **tipo de subagente** + prompts diversos: `poteto-agent`, `comment-sicko`, `code-reviewer`, `code-architect`, `code-explorer`, `general-purpose`, `Explore` |
-| `~/.cursor/rules/pstack-models.mdc` (regra always-apply) | `~/.zcode/pstack-roles.md` (arquivo lido sob demanda pelas skills; fallback inline) |
-| `/setup-pstack` escolhe modelos | `/setup-pstack` escolhe **subagente por papel** e escreve `~/.zcode/pstack-roles.md` |
+| `Task` tool with `subagent_type` + `model` | `Agent` tool with `subagent_type` (no `model`) |
+| Multi-model role routing (sol/grok/fable/opus) | Routing by **subagent type** plus varied prompts: `poteto-agent`, `comment-sicko`, `code-reviewer`, `code-architect`, `code-explorer`, `general-purpose`, `Explore` |
+| `~/.cursor/rules/pstack-models.mdc` (an always-apply rule) | `~/.zcode/pstack-roles.md` (a file the skills read on demand, with an inline fallback) |
+| `/setup-pstack` picks models | `/setup-pstack` picks the **subagent per role** and writes `~/.zcode/pstack-roles.md` |
 | `AskQuestion` | `AskUserQuestion` |
-| `/create-skill` (built-in do Cursor) | plugin oficial `skill-creator` + playbook próprio `authoring-a-skill` |
-| `cursor-team-kit`: `/deslop`, `control-cli`, `control-ui` | removidos como dependência dura; `/deslop` coberto pela skill `unslop`; controle de UI apontado para o plugin `browser-use` quando disponível |
-| bugbot / agentic security review | code review do ZCode (`code-reviewer`) com a mesma postura cética (bugbot-triage mantido como referência genérica de triagem de bot) |
-| `/loop` (Cursor) | automações agendadas do ZCode (ferramentas Cron: CronCreate/CronUpdate/CronList/CronDelete) |
-| `.cursor/automations/benny/` instalado no repo alvo | skills copiadas para `<repo>/.zcode/skills/` + agendamento via Cron |
-| `/add-plugin pstack` (marketplace do Cursor) | marketplace local: este repo é um marketplace (raiz `marketplace.json`); instalação em Settings → Plugin Management → Discover → **+** → diretório local |
-| `subagent_type: "Comment Sicko"` | `subagent_type: "comment-sicko"` (nome normalizado; `subagent_type` não aceita espaço) |
+| `/create-skill` (a Cursor built-in) | the official `skill-creator` plugin plus our own `authoring-a-skill` playbook |
+| `cursor-team-kit`: `/deslop`, `control-cli`, `control-ui` | removed as hard dependencies. The `unslop` skill covers `/deslop`. UI control points at the `browser-use` plugin when present |
+| bugbot / agentic security review | ZCode code review (`code-reviewer`) with the same skeptical posture. bugbot-triage stays as the generic bot-triage reference |
+| `/loop` (Cursor) | ZCode scheduled automations (the Cron tools: CronCreate, CronUpdate, CronList, CronDelete) |
+| `.cursor/automations/benny/` installed in the target repo | skills copied to `<repo>/.zcode/skills/` plus scheduling through Cron |
+| `/add-plugin pstack` (Cursor marketplace) | a local marketplace. This repo is itself a marketplace (root `marketplace.json`); install through Settings → Plugin Management → Discover → **+** |
+| `subagent_type: "Comment Sicko"` | `subagent_type: "comment-sicko"` (name normalized, because `subagent_type` accepts no space) |
 
-### Degradação assumida: diversidade de modelo
+### Assumed degradation: model diversity
 
-O ZCode não expõe escolha de modelo por subagente. Painéis multi-modelo (how critics,
-arena runners, interrogate reviewers etc.) viram **N subagentes em paralelo com o
-mesmo modelo**, diferenciados por tipo de subagente e prompt. A diversidade sobrevive
-na forma de perspectiva (reviewer vs architect vs explorer), não de família de modelo.
-"A second opinion is the same prompt against a different model" vira "...against a
-different subagent type".
+ZCode exposes no per-subagent model choice. Multi-model panels (how critics, arena runners, interrogate reviewers, and so on) become **N parallel subagents on the same model**, differentiated by subagent type and prompt. Diversity survives as perspective (reviewer versus architect versus explorer), not as model family. "A second opinion is the same prompt against a different model" becomes "...against a different subagent type".
 
-## Mudanças por área
+## Changes by area
 
-1. **Manifestos** — novo `.zcode-plugin/plugin.json` (`name: pstack`, `skills: ./skills/`, `agents: ./agents/`, atribuição ao autor original); `.cursor-plugin/` intocado; `marketplace.json` na raiz listando o plugin com `source: "./"`.
-2. **`skills/poteto-mode/SKILL.md`** — seção Subagents reescrita (defaults de `Agent` call: `run_in_background: true`, sem `model`, roteamento por papel lendo `~/.zcode/pstack-roles.md`); referências a built-ins do Cursor trocadas pelos equivalentes ZCode; nota de que o "mode" do Cursor vira skill invocável normal.
-3. **`skills/setup-pstack/SKILL.md`** — reescrita completa: detecta tipos de subagente disponíveis na sessão (built-ins + contribuídos por plugins), mapeia papel→subagente, escreve `~/.zcode/pstack-roles.md` com shape análogo ao original.
-4. **Skills de fan-out** (`how`, `why`, `arena`, `swarm`, `interrogate`, `reflect`, `architect`, `recall`, `no-comments`, `show-me-your-work`, `automate-me`, `create-verification-skill`, `maintain-verification-skill`) — substituição de `Task`→`Agent`, remoção do campo `model`, painéis → listas de subagentes, `AskQuestion`→`AskUserQuestion`, `~/.cursor/rules/...`→`~/.zcode/pstack-roles.md`.
-5. **Playbooks** (babysit, shipping, autonomous-run, autopilot-*, orchestrate, authoring-a-skill, opening-a-pr, eval, pause-safely, session-pickup, worktree-cleanup, visual-parity, bug-fix) — mesmo tratamento; `/loop` → Cron; bugbot → review de bot genérico; control-cli/control-ui → browser-use.
-6. **Scripts TS** — `watch-pr`: marcador `CURSOR_AUTOMATION_ID` → `ZCODE_AUTOMATION_ID`; detecção de autor de bot passa a aceitar `zcode` além de `cursor` (paginação GraphQL "cursor" não é tocada — falso positivo). Testes atualizados. `orch`/`bootstrap`/`worktree-audit.sh` não referenciam o harness.
-7. **Benny** — `FOR_AGENTS.md` e `setup-benny` passam a instalar em `<repo>/.zcode/skills/` e a registrar os dois prompts de automação via CronCreate; `control-adapter.md` aponta para `browser-use`.
-8. **docs/guide + README** — install/get-started reescritos para o ZCode; seção de modelos substituída pela de subagentes; atribuição ao upstream mantida em destaque (MIT).
-9. **Frontmatter** — campos extras do Cursor (`icon`, `color`, `reminder`, `mode`, `disable-model-invocation`) mantidos: inócuos se ignorados, preservam compatibilidade com o Cursor. `name:` normalizado para kebab-case onde necessário (`Comment Sicko` → `comment-sicko`; `Poteto Mode` → `poteto-mode`).
+1. **Manifests.** New `.zcode-plugin/plugin.json` (`name: pstack`, `skills: ./skills/`, `agents: ./agents/`, attribution to the original author). `.cursor-plugin/` untouched. `marketplace.json` at the root, listing the plugin with `source: "./"`.
+2. **`skills/poteto-mode/SKILL.md`.** Subagents section rewritten (`Agent` call defaults: `run_in_background: true`, no `model`, role routing reads `~/.zcode/pstack-roles.md`). Cursor built-in references replaced with the ZCode equivalents. A note that Cursor's "mode" becomes a normally invokable skill.
+3. **`skills/setup-pstack/SKILL.md`.** Full rewrite. It detects the subagent types available in the session (built-ins plus plugin-contributed), maps each role to a subagent, and writes `~/.zcode/pstack-roles.md` in a shape analogous to the original.
+4. **Fan-out skills** (`how`, `why`, `arena`, `swarm`, `interrogate`, `reflect`, `architect`, `recall`, `no-comments`, `show-me-your-work`, `automate-me`, `create-verification-skill`, `maintain-verification-skill`). `Task`→`Agent`, the `model` field removed, panels become subagent lists, `AskQuestion`→`AskUserQuestion`, `~/.cursor/rules/...`→`~/.zcode/pstack-roles.md`.
+5. **Playbooks** (babysit, shipping, autonomous-run, autopilot-*, orchestrate, authoring-a-skill, opening-a-pr, eval, pause-safely, session-pickup, worktree-cleanup, visual-parity, bug-fix). Same treatment. `/loop` becomes Cron. bugbot becomes generic bot review. control-cli and control-ui point at browser-use.
+6. **TypeScript scripts.** `watch-pr`: the `CURSOR_AUTOMATION_ID` marker becomes `ZCODE_AUTOMATION_ID`, and bot-author detection accepts `zcode` in addition to `cursor`. The GraphQL pagination term "cursor" is a false positive and stays untouched. Tests updated. `orch`, `bootstrap`, and `worktree-audit.sh` did not reference the harness at 0.14.1.
+7. **Benny.** `FOR_AGENTS.md` and `setup-benny` install into `<repo>/.zcode/skills/` and register the two automation prompts through CronCreate. `control-adapter.md` points at `browser-use`.
+8. **docs/guide plus README.** Install and get-started rewritten for ZCode. The models section became the subagents section. Upstream attribution stays prominent (MIT).
+9. **Frontmatter.** Cursor's extra fields (`icon`, `color`, `reminder`, `mode`, `disable-model-invocation`) are kept. They are harmless when ignored and preserve Cursor compatibility. `name:` normalized to kebab-case where needed (`Comment Sicko` → `comment-sicko`; `Poteto Mode` → `poteto-mode`).
 
-## Interações conhecidas
+## Known interactions
 
-- `tdd` e `teach` já existem em `~/.agents/skills/` do usuário. Precedência do ZCode:
-  skills de plugin são as últimas, então `tdd`/`teach` do pstack ficam sombreados quando
-  invocados pelo nome simples. Comportamento permanece equivalente (TDD/ensino); para o
-  flavor do poteto, remover as skills antigas ou invocar qualificado (`pstack:tdd`).
-- ~41 skills + 2 agentes entram na lista global de skills do ZCode (mesmo impacto que
-  superpowers).
+- `tdd` and `teach` already exist in the user's `~/.agents/skills/`. ZCode gives plugin skills the lowest precedence, so pstack's `tdd` and `teach` are shadowed when invoked by bare name. The behavior stays equivalent. For poteto's flavor, remove the old skills or invoke them qualified (`pstack:tdd`).
+- About 41 skills plus 2 agents entered ZCode's global skill list at 0.14.1, the same footprint as superpowers. After the 0.15.2 sync the count is 47 skills.
 
-## Instalação (usuário final)
+## Installation (end user)
 
-1. Settings → Plugin Management → Discover → **+** → adicionar diretório local
-   `~/projects/personal/pstack-zcode` (a raiz é um marketplace listando `pstack`).
-2. Instalar **pstack**.
-3. Opcional: `/setup-pstack` para escolher subagente por papel.
-4. Uso: `/poteto-mode <pedido>`.
+1. Settings → Plugin Management → Discover → **+** → add the git URL `https://github.com/oliderservin/pstack-zcode.git` (the repo root is a marketplace listing `pstack`), or point at a local clone of it.
+2. Install **pstack**.
+3. Optional: `/setup-pstack` to pick the subagent per role.
+4. Use: `/poteto-mode <request>`.
 
-## Verificação
+## Verification
 
-- `bun test` nos scripts (orch, watch-pr) passa.
-- `grep` pós-porta não encontra Cursor-isms de prose/code (exceto paginação GraphQL
-  e menções históricas deliberadas ao upstream).
-- Manifesto `.zcode-plugin/plugin.json` valida contra o formato (name regex
-  `^[a-z0-9][a-z0-9._-]{0,127}$`, campos `skills`/`agents`).
-- Estrutura de skills: todo `skills/*/SKILL.md` com frontmatter `name`+`description`,
-  `name` igual ao diretório em kebab-case.
+- `bun test` on the scripts (orch, watch-pr) passes.
+- A post-port `grep` finds no prose or code Cursor-isms, except GraphQL pagination and deliberate historical mentions of upstream.
+- The `.zcode-plugin/plugin.json` manifest validates against the format (name regex `^[a-z0-9][a-z0-9._-]{0,127}$`, `skills`/`agents` fields).
+- Skill structure: every `skills/*/SKILL.md` has frontmatter `name` + `description`, and `name` equals its directory in kebab-case.
 
 ## Sync 0.15.2 (2026-09-21)
 
-Delta upstream 0.14.1 → 0.15.2: 94 M, 5 A (`assets/logo.png`, `make-bot-ui`,
-`principle-attack-the-premise`, `principle-test-behavior-not-implementation`,
-`scripts/check-plan.mjs`), 3 D (`how/references/critic-prompt.md`,
-`critique-rubric.md`, `poteto-mode/references/plan.md` — Critique mode e plan.md
-saem; seguido o novo shape, nada ressuscitado).
+Upstream delta 0.14.1 → 0.15.2: 94 M, 5 A (`assets/logo.png`, `make-bot-ui`, `principle-attack-the-premise`, `principle-test-behavior-not-implementation`, `scripts/check-plan.mjs`), 3 D (`how/references/critic-prompt.md`, `critique-rubric.md`, `poteto-mode/references/plan.md`). Critique mode and plan.md are gone upstream. We followed the new shape and resurrected nothing.
 
-Abordagem: sync puro primeiro (commit próprio), depois os codemods
-`adapt-phase1.py`/`adapt-phase2a.py` — estendidos com ~30 entradas novas para
-strings do 0.15.2 (control-ui/control-cli, `/loop`, `/goal`, grok slug,
-create-skill, linguagem de "model family") — e merge de 3 vias por arquivo
-(base `3d2fea8` / porta `295921e` / upstream 0.15.2) com resolução manual dos
-hotspots: Subagents do poteto-mode, setup-pstack (mantido o design
-tipo-por-papel + incorporado o budget ask do upstream como registro de
-reasoning, sem retratar modelos), README, how, e os playbooks reescritos
-upstream (shipping/babysit/opening-a-pr/autopilot-* agora abstraem forge
-"Origin"; mantida a abstração, adaptados cloud agent/deslop/loop).
-`make-bot-ui` adaptado com split honesto: backend webhook (Cursor) vs log local
-+ automação Cron (ZCode, sem webhook). `check-plan.mjs` com markers sincronizados
-ao skeleton adaptado (valida com 0 problemas).
+Approach: a pure sync commit first, then the `adapt-phase1.py`/`adapt-phase2a.py` codemods, extended with about 30 new entries for 0.15.2 strings (control-ui, control-cli, `/loop`, `/goal`, the grok slug, create-skill, "model family" language), then a per-file three-way merge (base `3d2fea8`, port `295921e`, upstream 0.15.2) with manual resolution of the hotspots: poteto-mode's Subagents section, setup-pstack (the type-per-role design kept, with upstream's budget ask incorporated as a reasoning-preference record and no pretense of model rewriting), README, how, and the playbooks upstream rewrote (shipping, babysit, opening-a-pr, and autopilot-* now abstract the forge as "Origin"; the abstraction is harness-neutral and was kept, with cloud agent, deslop, and loop adapted). `make-bot-ui` was adapted with an honest split: a webhook backend (Cursor) versus a local JSONL log drained by a Cron automation (ZCode, which has no inbound webhook). `check-plan.mjs` markers were synchronized to the adapted skeleton, and it validates with 0 problems.
 
-Fixes de auditoria: `worktree-audit.sh` ganha `PSTACK_TRANSCRIPTS_DIR` (sem ele,
-LAST_CHAT = "unknown" + nota no stderr; nenhum path inventado);
-`create-skill` → `skill-creator` em automate-me e reflect/synthesizer; seção
-"runtime prerequisites" no README (gh, bun, gt); checagem de presença do `gt`
-no `orch.ts` (`frontier set`) antes de qualquer shell-out, com mensagem clara.
-Versão `0.15.2-zcode.1`; marketplace renomeado `pstack-zcode` (owner oliverservin).
+Audit fixes: `worktree-audit.sh` gains `PSTACK_TRANSCRIPTS_DIR`. Without it, LAST_CHAT reports "unknown" with a stderr note, and no path is invented. `create-skill` → `skill-creator` in automate-me and reflect/synthesizer. A "runtime prerequisites" section in the README (gh, bun, gt). A `gt` presence check in `orch.ts` (`frontier set`) before any shell-out, with a clear message. Version `0.15.2-zcode.1`; marketplace renamed `pstack-zcode` (owner oliderservin).
 
-Pós-sync (mesma data): a degradação "diversidade de modelo não sobrevive" foi
-refinada. O `Agent` tool não escolhe modelo, mas workflows dinâmicos aceitam
-`subagent_model` por run (enumere com `ListModels`); `arena` ganhou a variante
-"Model bakeoff": um workflow por modelo concorrente, mesmo prompt/rubrica/paths,
-pick/graft normais entre runs. Arena de tipos continua o default.
+Post-sync (same date): the "model diversity does not survive" degradation is refined. The `Agent` tool picks no model, but dynamic workflows accept `subagent_model` per run (enumerate the choices with `ListModels`). `arena` gained the "Model bakeoff" variant: one workflow per contestant model, the same prompt, rubric, and paths, with normal pick and graft across runs. The type arena stays the default.
