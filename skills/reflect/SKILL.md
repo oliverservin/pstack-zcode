@@ -16,7 +16,7 @@ Invoke when the user says "reflect" or "/reflect". Skip when the conversation is
 
 ### 1. Locate the active transcript
 
-The parent finds its own transcript file before fanning out. Prefer a transcript directory inside the active workspace if one exists; otherwise look under `~/.zcode/cli/` for the current session's rollout files. Do not glob across other projects' session directories. That crosses workspace boundaries and reads private chats from unrelated projects.
+The parent finds its own transcript file before fanning out. Prefer a transcript directory inside the active workspace if one exists. Otherwise look under `~/.zcode/cli/` for the current session's rollout files. Do not glob across other workspaces' session directories. That crosses workspace boundaries and reads private chats from unrelated projects. For a cited prior session id, prefer the `ReadSessionContext` tool with a focused query over reading the rollout file.
 
 ```bash
 ls -t <agent-transcripts>/*.jsonl <agent-transcripts>/*/*.jsonl <agent-transcripts>/*/subagents/*.jsonl 2>/dev/null | head -10
@@ -30,11 +30,13 @@ For each candidate, read the first JSONL line and check that `message.content[0]
 
 One message, three `Agent` calls, one distinct `subagent_type` each. Reviewers need MCP access for context lookups (tickets, chat threads, observability traces referenced in the transcript), so use types with full tool access.
 
-| Lens | `subagent_type` | Prompt template |
-|---|---|---|
-| Judgment | your configured reflect-judgment type (default `general-purpose`) | `references/judgment-reviewer.md` |
-| Tooling | your configured reflect-tooling type (default `code-reviewer`) | `references/tooling-reviewer.md` |
-| Divergent | your configured reflect-judgment type (default `general-purpose`) | `references/divergent-reviewer.md` |
+Each reviewer and the synthesizer name a role line in `~/.zcode/pstack-roles.md` and a default. Use the type from that line, or the default when the file or the line is missing. If the `Agent` tool rejects a type, use the default and say so.
+
+| Lens | Roles-file line | Default `subagent_type` | Prompt template |
+|---|---|---|---|
+| Judgment | `reflect judgment, divergent, synthesizer` | `general-purpose` | `references/judgment-reviewer.md` |
+| Tooling | `reflect tooling` | `code-reviewer` | `references/tooling-reviewer.md` |
+| Divergent | `reflect judgment, divergent, synthesizer` | `general-purpose` | `references/divergent-reviewer.md` |
 
 Pass each template verbatim, substituting the transcript path or digest where marked. Reviewers return findings in the `Agent` response body.
 

@@ -8,6 +8,8 @@ disable-model-invocation: true
 
 Explore the codebase to answer "how does X work?" questions. Produce architectural explanations at the level of a senior engineer onboarding onto a subsystem, enough to build a working mental model, not so much that it reads like annotated source code.
 
+Each spawn below names a role line in `~/.zcode/pstack-roles.md` and a default. Use the line's value as the `subagent_type`, or the default if the file or the line is missing. If the `Agent` tool rejects a configured type, check the valid types in its error message, use the closest equivalent, and say so.
+
 ## Step 1. Assess Complexity
 
 If the scope is ambiguous, state your interpretation and explore. The user can redirect.
@@ -21,7 +23,7 @@ When in doubt, take the simple path.
 
 Decompose the question into 2 to 4 exploration angles, each a distinct slice of the subsystem. Spawn all explorers in a single message:
 
-- `subagent_type`: `Explore` (read-only; or your configured how-explorer type, default `Explore`)
+- `subagent_type`: the `how explorer` line in `~/.zcode/pstack-roles.md`, default `Explore` (read-only)
 
 Each explorer gets the prompt in `references/explorer-prompt.md` with its angle filled in. Then go to Step 3.
 
@@ -29,7 +31,7 @@ Each explorer gets the prompt in `references/explorer-prompt.md` with its angle 
 
 Spawn one Agent subagent that explores and explains in one pass:
 
-- `subagent_type`: `general-purpose` (or your configured how-explainer type)
+- `subagent_type`: the `how explainer` line in `~/.zcode/pstack-roles.md`, default `general-purpose`
 
 Build its prompt from `references/explainer-prompt.md` without the explorer-findings section. Go to Step 4.
 
@@ -37,7 +39,7 @@ Build its prompt from `references/explainer-prompt.md` without the explorer-find
 
 Once all explorers have returned, spawn one Agent subagent to synthesize their findings into one explanation:
 
-- `subagent_type`: `general-purpose` (or your configured how-explainer type)
+- `subagent_type`: the `how explainer` line in `~/.zcode/pstack-roles.md`, default `general-purpose`
 
 Build its prompt from `references/explainer-prompt.md` with every explorer's findings filled in.
 

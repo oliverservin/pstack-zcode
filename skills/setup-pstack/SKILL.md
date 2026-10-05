@@ -7,7 +7,7 @@ description: Configure which subagent types pstack uses per role, and your reaso
 
 Write `~/.zcode/pstack-roles.md`, a plain file the pstack skills read on demand, that sets pstack's subagent type per role. The skills read it and fall back to their inline defaults when a line is absent, so this is an override layer, not a requirement.
 
-ZCode runs every subagent on the session model; there is no per-role model choice. What this file configures is the **subagent type** each role fans out to, which is where diversity comes from: a reviewer type reads a diff differently than an architect type or a general-purpose delegate. The budget line below records your preferred reasoning intensity; ZCode applies reasoning levels only where it exposes them (your session model's reasoning setting, and `$reasoningLevel`-suffixed subagent models in dynamic workflows), so treat it as the preference of record rather than a per-role override.
+ZCode runs every subagent on the session model, so there is no per-role model choice. What this file configures is the **subagent type** each role fans out to, which is where diversity comes from: a reviewer type reads a diff differently than an architect type or a general-purpose delegate. The budget line below records your preferred reasoning intensity. ZCode applies reasoning levels only where it exposes them (your session model's reasoning setting, and `$reasoningLevel`-suffixed subagent models in dynamic workflows), so treat it as the preference of record rather than a per-role override.
 
 ## Steps
 
@@ -19,11 +19,11 @@ Enumerate the `subagent_type` values you can pass to an `Agent` call in this ses
 2. Types contributed by enabled plugins and declared in this session (pstack itself contributes `poteto-agent` and `comment-sicko`).
 3. Agent definitions ZCode scans outside plugins (for example `~/.zcode/cli/agents/`).
 
-Never write a type you have not confirmed exists. A role line pointing at a type the `Agent` tool rejects breaks every delegation that reads it.
+If you cannot detect any, ask the user to paste the `subagent_type` values they have. Never write a type you have not confirmed exists. A role line pointing at a type the `Agent` tool rejects breaks every delegation that reads it.
 
 ### 2. Load current state
 
-The default role-to-type mapping is the shape shown in step 5 below. If `~/.zcode/pstack-roles.md` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults.
+The default role-to-type mapping is the shape shown in step 5 below. If `~/.zcode/pstack-roles.md` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in the shape below, such as `how critics`, is from a retired role. Drop it.
 
 ### 3. Budget, map, and confirm
 
@@ -36,7 +36,7 @@ The default role-to-type mapping is the shape shown in step 5 below. If `~/.zcod
 
 **(b) Record it.** ZCode has no per-role model to retarget, so the budget does not rewrite any role line. Record the chosen label in the file's `# budget` line, and when the user wants it applied, carry it into the places ZCode actually exposes a reasoning level: their session model's reasoning setting, and any `$reasoningLevel` suffix a dynamic workflow's `subagent_model` picks.
 
-**(c) Show the roles and confirm.** Show every role with its current type, marking any type not in the detected set as needing a choice. Ask whether to accept as-is or change specific roles, offering the detected types as the options. Prefer `AskUserQuestion` over free text. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, so the list length sets the fan-out; entries may repeat a type when you want volume over diversity. `arena cross-judge pool` is also a list, and Arena picks one value from it. `swarm workers` is the default type for every worker unless a race or comparison assigns another per arm.
+**(c) Show the roles and confirm.** Show every role with its current type, marking any type not in the detected set as needing a choice. Ask whether to accept as-is or change specific roles, offering the detected types as the options. Prefer `AskUserQuestion` over free text. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, so the list length sets the fan-out. Entries may repeat a type when you want volume over diversity. `arena cross-judge pool` is also a list, and Arena picks one value from it. `swarm workers` is the default type for every worker unless a race or comparison assigns another per arm.
 
 ### 4. Validate
 
@@ -60,7 +60,7 @@ judgment and prose: general-purpose
 hardest tasks: poteto-agent
 how explorer: Explore
 how explainer: general-purpose
-why investigators: Explore
+why investigators: general-purpose
 why synthesizer: general-purpose
 reflect tooling: code-reviewer
 reflect judgment, divergent, synthesizer: general-purpose

@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "process",
+            "command": "node",
+            "args": ["${ZCODE_PLUGIN_ROOT}/hooks/commit-reminder.mjs"],
+            "timeoutMs": 5000,
+            "statusMessage": "pstack commit reminder"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -57,7 +57,7 @@ ZCode exposes no per-subagent model choice. Multi-model panels (how critics, are
 
 ## Installation (end user)
 
-1. Settings → Plugin Management → Discover → **+** → add the git URL `https://github.com/oliderservin/pstack-zcode.git` (the repo root is a marketplace listing `pstack`), or point at a local clone of it.
+1. Settings → Plugin Management → Discover → **+** → add the git URL `https://github.com/oliverservin/pstack-zcode.git` (the repo root is a marketplace listing `pstack`), or point at a local clone of it.
 2. Install **pstack**.
 3. Optional: `/setup-pstack` to pick the subagent per role.
 4. Use: `/poteto-mode <request>`.
@@ -78,3 +78,29 @@ Approach: a pure sync commit first, then the `adapt-phase1.py`/`adapt-phase2a.py
 Audit fixes: `worktree-audit.sh` gains `PSTACK_TRANSCRIPTS_DIR`. Without it, LAST_CHAT reports "unknown" with a stderr note, and no path is invented. `create-skill` → `skill-creator` in automate-me and reflect/synthesizer. A "runtime prerequisites" section in the README (gh, bun, gt). A `gt` presence check in `orch.ts` (`frontier set`) before any shell-out, with a clear message. Version `0.15.2-zcode.1`; marketplace renamed `pstack-zcode` (owner oliderservin).
 
 Post-sync (same date): the "model diversity does not survive" degradation is refined. The `Agent` tool picks no model, but dynamic workflows accept `subagent_model` per run (enumerate the choices with `ListModels`). `arena` gained the "Model bakeoff" variant: one workflow per contestant model, the same prompt, rubric, and paths, with normal pick and graft across runs. The type arena stays the default.
+
+## Sync 0.15.13 (2026-10-05)
+
+Upstream delta 0.15.2 → 0.15.13: 62 shared files (56 M, 6 A: `benchmark-checklist`, `correct`, `poteto-help` plus its two references, `principle-explain-the-number`), no upstream deletions. Waves: the 2026-09-23 skill updates with Opus 5.5/Grok 4.7 defaults and the 19-instruction cut (#414, #416, #419, #422), 0.15.6 (explain-the-number, benchmark-checklist, fresh subagents, the hourly autopilot tick, PR headings, the schema-first cast), `/correct` (#494), the architect agent-mistake red flags (#495), the bare performance mantras (#496), `/poteto-help` with its prompting references (#502, #506, #507), and the guide refresh (#508). Skill count after the sync: 51.
+
+Approach: the 0.15.2 procedure again. A pure sync commit first (`c842740`, verbatim upstream at the 63 changed shared paths), then the codemods (84 mechanical replacements), then a per-file three-way merge (base `9f56434`) fanned out to three subagents over disjoint partitions (poteto-mode plus playbooks plus reflect, the other skills plus the new skills, README plus guide plus `poteto-agent.md`). Model panels became subagent-type panels throughout, and upstream's per-playbook role lines (`feature, refactoring`, `bug-fix`, `perf-issue`, `hillclimb`, `hardest tasks`, `judgment and prose`) survive with type values in `~/.zcode/pstack-roles.md`. `check-plan.mjs` markers were re-synchronized ("Ten background lanes at the PR head", installed-copy and hourly markers) and the extracted skeleton validates with 0 problems. Upstream's `cloud_base_branch` swarm line became "each worker creates its own git worktree", because subagents share the parent's checkout. The sync clobbered three deliberate fork additions and review restored them: the arena Model bakeoff variant, the fork's setup-pstack design, and the fork's ZCode MCP-discovery text in `why`. `poteto-help` is the heaviest new adaptation: marketplace install, the sticky-skill phrasing, honest attribution, and ZCode equivalents throughout its "Not in pstack" map. The guide's `/loop` and Cursor Projects sections became Cron automations and standing coordinator chats in separate workspaces.
+
+Audit fixes during review: setup-pstack's example `why investigators` line changed from `Explore` to `general-purpose` (a read-only type strips MCP access), poteto-mode's hardest-changes sentence now names the `hardest tasks` role instead of the judgment role, "Cross-model review of the trail" became "Cross-type", an orchestrate verifier "different model family" leftover became "different subagent type", a duplicated Fresh-subagents paragraph was deduplicated, and six semicolon sentences were split per unslop. Version `0.15.13-zcode.1`.
+
+## ZCode modernization (2026-10-05)
+
+ZCode gained features since the adaptation layer was designed on 2026-09-21. This pass adopts them.
+
+- **ReadSessionContext for prior-session reads.** `recall`, `automate-me`, `session-pickup`, and `reflect` now locate the workspace's session files to enumerate candidate session ids cheaply (listing only), then read each candidate through the `ReadSessionContext` tool with a focused query instead of parsing JSONL by hand. Direct transcript reading stays the fallback when the tool is unavailable or rejects an id. The current session's own transcript stays path-based, because the tool reads persisted other sessions, not reliably the in-flight one.
+- **Commit-reminder hook.** New `hooks/hooks.json` registers a PreToolUse hook matched on the `Bash` tool, and `hooks/commit-reminder.mjs` implements it. The manifest gains `"hooks": "hooks/"`. The output shape came from research into the shipped plugins. superpowers 5.1.0 ships the one real `additionalContext` example, a SessionStart hook emitting the nested `hookSpecificOutput` object with `hookEventName` and `additionalContext`, so the reminder copies that exact shape with `hookEventName: "PreToolUse"`. The script only ever exits 0, so it never blocks or errors a commit. Installing pstack auto-enables ZCode's hook runner, because plugin hooks do that.
+- **Idle-time tasks.** Guide 07 gained a short section on `OffPeakCreate`, which queues deferrable work for off-peak compute at no plan-quota cost. It is distinct from the Cron automations, which fire on a schedule.
+- **Agent lifecycle tools.** poteto-mode's `Agent` defaults paragraph names `TaskOutput` for waiting on a background agent and `SendMessage` for messaging or resuming one.
+
+Considered and skipped:
+
+- **AGENTS.md pointer for the roles file.** On-demand reads keep the context window clean. An always-injected pointer taxes every session.
+- **Dynamic workflows for swarm and autopilot.** Arena already uses the model-picking lever. Churning the Agent-based playbooks is a redesign, not a modernization.
+- **`when_to_use` frontmatter.** The descriptions already carry triggers. Duplication buys nothing.
+- **userConfig toggle for the hook.** There is no supported way for a hook script to read config values.
+
+Two honest facts. `disable-model-invocation` is not a recognized ZCode frontmatter key, so typed-only skills stay model-invocable in ZCode today. The zcode-guide doc claims plugin `agents` fields are "recorded but not executed", while this very session lists `poteto-agent` and `comment-sicko` as live types, so that doc note is stale.

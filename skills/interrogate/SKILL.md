@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Interrogate
 
-Spawn one reviewer per configured subagent type to adversarially review code changes. Each reviewer gets the same prompt and rubric. ZCode runs every subagent on the session model, so the adversarial signal comes from the reviewers' distinct postures and tool scopes (a reviewer type reads a diff differently than an architect type), not assigned personas. Agreement across independently spawned reviewers is high-confidence signal; single-reviewer findings are worth reading but lower confidence.
+Spawn one reviewer per configured subagent type to adversarially review code changes. Each reviewer gets the same prompt and rubric. ZCode runs every subagent on the session model, so the adversarial signal comes from the reviewers' distinct postures and tool scopes (a reviewer type reads a diff differently than an architect type), not assigned personas. Agreement across independently spawned reviewers is high-confidence signal. Single-reviewer findings are worth reading but lower confidence.
 
 The deliverable is a synthesized verdict. Do NOT auto-apply changes.
 
@@ -33,19 +33,18 @@ Write one clear paragraph. If you're unsure about the intent, ask the user befor
 
 ## Step 3, Spawn Reviewers
 
-Launch all reviewers in a single message using the Agent tool. Use the `interrogate reviewers` list from `~/.zcode/pstack-roles.md` when present, one reviewer per entry, extending or shrinking the Reviewer A/B/C/D labels below to the configured entry count; otherwise use the table defaults.
+Launch all reviewers in a single message using the Agent tool. Use the `interrogate reviewers` line in `~/.zcode/pstack-roles.md`, one reviewer per entry, extending or shrinking the Reviewer A/B/C labels below to the configured entry count. If the file or that line is missing, use the table defaults.
 
 | Subagent | Default type |
 |----------|--------------|
 | Reviewer A | `code-reviewer` |
 | Reviewer B | `code-architect` |
-| Reviewer C | `poteto-agent` |
-| Reviewer D | `general-purpose` |
+| Reviewer C | `general-purpose` |
 
 For each reviewer:
 - `subagent_type`: the configured `interrogate reviewers` entry, or the table default with no configured line
 
-If a configured type is rejected as unresolvable when you try to spawn the subagent, check the valid types in the Agent tool's error message, pick the closest equivalent, spawn with the valid type, and open a separate PR to update the configured value or default table. Do not block the review on the type issue.
+If a configured type is rejected as unresolvable when you try to spawn the subagent, check the valid types in the Agent tool's error message, pick the closest equivalent, spawn with the valid type, and say so in the verdict. Update the configured value in `~/.zcode/pstack-roles.md`, or open a separate PR to fix the default table. Do not block the review on the type issue.
 
 Read `references/reviewer-prompt.md` and fill in the template with:
 1. The stated intent

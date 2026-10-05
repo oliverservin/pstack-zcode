@@ -10,6 +10,8 @@ Investigate the motivation and intent behind code.
 
 Companion to the `how` skill. `how` answers what the code does and how it works. `why` answers what forces led to its shape.
 
+Each spawn below names a role line in `~/.zcode/pstack-roles.md` and a default. Use the line's value as the `subagent_type`, or the default if the file or the line is missing. If the `Agent` tool rejects a configured type, check the valid types in its error message, use the closest equivalent, and say so.
+
 ## Operating Posture
 
 Operate as a **careful, cautious, and precise investigator**. Be honest about what you know vs what you're inferring. Read `references/epistemics.md` for the full confidence framework and phrasing guide. The synthesizer must follow it.
@@ -78,7 +80,7 @@ Aim for a complete **coverage map**, not a minimal one. Document the null, don't
 Launch all matching investigators in a single message so they run concurrently. Don't ask one agent to cover multiple MCPs.
 
 Subagent config (each):
-- `subagent_type`: `general-purpose` (or your configured why-investigators type). Use a type with full tool access: investigators need MCP tools to query evidence sources. Investigators still shouldn't write anything. That's a posture, not a sandbox.
+- `subagent_type`: the `why investigators` line in `~/.zcode/pstack-roles.md`, default `general-purpose`. Use a type with full tool access: investigators need MCP tools to query evidence sources, and a read-only type strips MCP access, which disables MCP-backed investigators entirely. Investigators still shouldn't write anything. That's a posture, not a sandbox.
 
 Each investigator gets:
 1. The base prompt from `references/investigator-prompt.md`
@@ -120,7 +122,7 @@ If your scope assessment suggests a single-commit trivial target where the PR de
 
 Spawn one synthesizer subagent:
 
-- `subagent_type`: `general-purpose` (or your configured why-synthesizer type). The synthesizer's quality check spot-verifies citations, which can require MCP access, so keep full tool access.
+- `subagent_type`: the `why synthesizer` line in `~/.zcode/pstack-roles.md`, default `general-purpose`. The synthesizer's quality check spot-verifies citations, which can require MCP access, so keep full tool access. A read-only type strips MCPs and defeats that.
 
 The synthesizer gets:
 1. The investigator findings, including any null results and any categories skipped with justification
