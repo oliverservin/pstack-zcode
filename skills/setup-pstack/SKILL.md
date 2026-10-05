@@ -1,73 +1,79 @@
 ---
 name: setup-pstack
-description: Configure which models pstack uses per role and at what reasoning budget. Detects your available models and writes an always-applied rule that overrides the skill defaults. Use for /setup-pstack, "configure pstack models", "pstack budget", or changing pstack's model choices.
+description: Configure which subagent types pstack uses per role, and your reasoning budget. Detects the agent types available in this session and writes ~/.zcode/pstack-roles.md, an override layer the skills read. Use for /setup-pstack, "configure pstack agents", "pstack budget", or changing pstack's subagent choices.
 ---
 
 # Setup pstack
 
-Write `~/.cursor/rules/pstack-models.mdc`, an always-applied rule that sets pstack's model per role.
+Write `~/.zcode/pstack-roles.md`, a plain file the pstack skills read on demand, that sets pstack's subagent type per role. The skills read it and fall back to their inline defaults when a line is absent, so this is an override layer, not a requirement.
+
+ZCode runs every subagent on the session model, so there is no per-role model choice. What this file configures is the **subagent type** each role fans out to, which is where diversity comes from: a reviewer type reads a diff differently than an architect type or a general-purpose delegate. The budget line below records your preferred reasoning intensity. ZCode applies reasoning levels only where it exposes them (your session model's reasoning setting, and `$reasoningLevel`-suffixed subagent models in dynamic workflows), so treat it as the preference of record rather than a per-role override.
 
 ## Steps
 
-### 1. Detect available models
+### 1. Detect available subagent types
 
-Enumerate the model slugs you can pass to a `Task` subagent in this session. That is the dependable source. If Cursor also exposes a models API or CLI that lists the user's entitled models, prefer it for completeness. If you cannot detect any, ask the user to paste the slugs they have access to. Never write a real slug you have not confirmed is available. The aliases `inherit-parent` and `auto` are always valid even though they are not detected slugs.
+Enumerate the `subagent_type` values you can pass to an `Agent` call in this session. The dependable sources, in order:
+
+1. Built-ins always present: `general-purpose`, `Explore`, `code-architect`, `code-explorer`, `code-reviewer`.
+2. Types contributed by enabled plugins and declared in this session (pstack itself contributes `poteto-agent` and `comment-sicko`).
+3. Agent definitions ZCode scans outside plugins (for example `~/.zcode/cli/agents/`).
+
+If you cannot detect any, ask the user to paste the `subagent_type` values they have. Never write a type you have not confirmed exists. A role line pointing at a type the `Agent` tool rejects breaks every delegation that reads it.
 
 ### 2. Load current state
 
-The default role-to-model mapping is the rule shape shown in step 5 below. If `~/.cursor/rules/pstack-models.mdc` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in step 5, such as `how critics`, is from a retired role. Drop it.
+The default role-to-type mapping is the shape shown in step 5 below. If `~/.zcode/pstack-roles.md` already exists, read it and treat its `# budget` line and its role values as the current choices. Otherwise start from those defaults. A line whose role is not in the shape below, such as `how critics`, is from a retired role. Drop it.
 
 ### 3. Budget, map, and confirm
 
-**(a) Ask for a budget.** Prefer AskQuestion over free text. Offer these four options with these exact labels, and name the current budget when the rule records one.
+**(a) Ask for a budget.** Prefer `AskUserQuestion` over free text. Offer these four options with these exact labels, and name the current budget when the file records one.
 
 - `unlimited — keep max`
 - `large — xhigh reasoning`
 - `medium — high reasoning`
 - `small — medium reasoning`
 
-**(b) Apply it.** Build the working table from the skill defaults, and on a re-run keep any role you changed by family, list, or alias (`inherit-parent`, `auto`). `unlimited` leaves every effort as in that table. `large`, `medium`, and `small` set the effort token of every real slug, panel entries included, to `xhigh`, `high`, or `medium`. The effort token is the last token, or the one before a trailing `fast`, on the ladder `max` > `xhigh` > `high` > `medium` > `low`. If the result is not a detected slug, use the same family's detected slug with the highest effort at or below the target, else mark the role as needing a choice. `inherit-parent` and `auto` do not change. So `small` turns `claude-opus-5-5-max` into `claude-opus-5-5-medium`, and `grok-4.7-xhigh-fast` into `grok-4.7-medium-fast`.
+**(b) Record it.** ZCode has no per-role model to retarget, so the budget does not rewrite any role line. Record the chosen label in the file's `# budget` line, and when the user wants it applied, carry it into the places ZCode actually exposes a reasoning level: their session model's reasoning setting, and any `$reasoningLevel` suffix a dynamic workflow's `subagent_model` picks.
 
-**(c) Show the roles and confirm.** Show every role with its model, marking any real slug not in the detected set as needing a choice. Also list each line step 2 dropped. Ask whether to accept as-is or change specific roles, offering the detected models plus `inherit-parent` and `auto` (both mean: this role runs on the parent chat model, which is how Auto users stay on Auto) as the options. Prefer AskQuestion over free text. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, alias entries included, so the list length sets the count. `arena cross-judge pool` is also a list, but Arena selects one value from it whose model family differs from the parent's when possible. `swarm workers` is the default model for every worker unless a race or comparison assigns another model per arm.
+**(c) Show the roles and confirm.** Show every role with its current type, marking any type not in the detected set as needing a choice. Ask whether to accept as-is or change specific roles, offering the detected types as the options. Prefer `AskUserQuestion` over free text. For panel roles (arena runners, architect runners, interrogate reviewers) the value is a list, and one subagent runs per entry, so the list length sets the fan-out. Entries may repeat a type when you want volume over diversity. `arena cross-judge pool` is also a list, and Arena picks one value from it. `swarm workers` is the default type for every worker unless a race or comparison assigns another per arm.
 
 ### 4. Validate
 
-Every real slug written must be in the detected set. `inherit-parent` and `auto` always pass. If a chosen real slug is not available, stop and ask again.
+Every type written must be in the detected set. If a chosen type is not available, stop and ask again.
 
-### 5. Write the rule
+### 5. Write the file
 
-Write `~/.cursor/rules/pstack-models.mdc` with `alwaysApply: true`, a `# budget` line with the chosen label and its target effort, and one line per role, using the same labels poteto-mode uses. Overwrite the whole file so re-runs stay idempotent. Shape:
+Write `~/.zcode/pstack-roles.md`, overwriting the whole file so re-runs stay idempotent. Shape:
 
-```
----
-description: pstack per-role model choices (overrides skill defaults)
-alwaysApply: true
----
-# pstack model configuration. One line per role. Delete a line to fall back to the skill default.
-# `inherit-parent` or `auto` as a value: the role runs on the parent chat model (omit Task `model`). Alias entries in a panel list still count toward its fan-out.
-# budget: unlimited (max)
-feature, refactoring: grok-4.7-xhigh-fast
-bug-fix: grok-4.7-xhigh-fast
-perf-issue: grok-4.7-xhigh-fast
-hillclimb: grok-4.7-xhigh-fast
-judgment and prose: claude-opus-5-5-max
-hardest tasks: claude-opus-5-5-max
-how explorer: grok-4.7-xhigh-fast
-how explainer: claude-opus-5-5-max
-why investigators: grok-4.7-xhigh-fast
-why synthesizer: claude-opus-5-5-max
-reflect tooling: gpt-5.6-sol-max
-reflect judgment, divergent, synthesizer: claude-opus-5-5-max
-arena runners: claude-opus-5-5-max, gpt-5.6-sol-max, grok-4.7-xhigh-fast
-arena cross-judge pool: claude-opus-5-5-max, gpt-5.6-sol-max, grok-4.7-xhigh-fast
-swarm workers: grok-4.7-xhigh-fast
-architect runners: claude-opus-5-5-max, gpt-5.6-sol-max, grok-4.7-xhigh-fast
-interrogate reviewers: claude-opus-5-5-max, gpt-5.6-sol-max, grok-4.7-xhigh-fast
+```markdown
+# pstack per-role subagent choices (overrides skill defaults)
+
+One line per role, `role: type[, type...]`. Delete a line to fall back to the skill default.
+
+# budget: large (xhigh)
+feature, refactoring: poteto-agent
+bug-fix: poteto-agent
+perf-issue: poteto-agent
+hillclimb: poteto-agent
+judgment and prose: general-purpose
+hardest tasks: poteto-agent
+how explorer: Explore
+how explainer: general-purpose
+why investigators: general-purpose
+why synthesizer: general-purpose
+reflect tooling: code-reviewer
+reflect judgment, divergent, synthesizer: general-purpose
+arena runners: poteto-agent, code-reviewer, general-purpose
+arena cross-judge pool: code-reviewer, general-purpose
+swarm workers: poteto-agent
+architect runners: code-architect, poteto-agent, general-purpose
+interrogate reviewers: code-reviewer, code-architect, general-purpose
 ```
 
 ### 6. Confirm
 
-Tell the user the rule was written and that it applies to new sessions. Re-running this skill updates it.
+Re-read the file you wrote and echo the final table to the user. State the fallback rule (absent line = skill default) and that rerunning `/setup-pstack` is always safe.
 
 ### 7. Offer a verification skill (optional)
 
