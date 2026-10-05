@@ -26,9 +26,9 @@ Update mode changes the rest of the flow:
 
 ### 1. Mine their history
 
-Locate the active workspace's transcripts before fanning out. Locate the current workspace's session transcripts (ZCode stores session data under `~/.zcode/cli/`). Use only the current workspace's paths. Don't glob across other workspaces' session directories. That crosses workspace boundaries and reads private chats from unrelated projects.
+Locate the active workspace's transcripts before fanning out. Locate the current workspace's session transcripts (ZCode stores session data under `~/.zcode/cli/`). Use only the current workspace's paths. Don't glob across other workspaces' session directories. That crosses workspace boundaries and reads private chats from unrelated projects. List the session files to enumerate candidate session ids cheaply, then read each candidate through the `ReadSessionContext` tool with a focused query instead of parsing the JSONL by hand. Fall back to reading a transcript file directly only when the tool is unavailable or rejects an id.
 
-Survey recent agent conversations within that scope for recurring patterns. Run multiple parallel subagents across slices of history (e.g. last 2-4 weeks, split into 3 slices so each has enough material). Each slice mining subagent reads transcripts from the workspace-scoped path the parent provides, looks for the signals below, and returns a short structured list of patterns it saw with evidence pointers. Default signals worth hunting:
+Survey recent agent conversations within that scope for recurring patterns. Run multiple parallel subagents across slices of history (e.g. last 2-4 weeks, split into 3 slices so each has enough material). Each slice mining subagent takes its slice of candidate session ids from the workspace-scoped listing the parent provides, reads each through `ReadSessionContext` with a focused query, hunts for the signals below, and returns a short structured list of patterns it saw with evidence pointers. Default signals worth hunting:
 
 - Response preferences (length, tone, format, "dumb it down" corrections)
 - Delegation habits (subagents, models, specialized workflows, parallelism)

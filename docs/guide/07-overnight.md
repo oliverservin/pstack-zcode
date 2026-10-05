@@ -117,4 +117,8 @@ pstack ships this as a dormant [automation pack](../../automations/benny/README.
 
 **Pitfall:** a duration is not a finish condition. "work on this for 4 hours" gives the agent nothing to check, and you'll wake up to four hours of motion instead of a result. Give the loop a predicate that can pass or fail.
 
+## Queue work for idle hours
+
+Idle-time tasks (`OffPeakCreate`) are another ZCode built-in, not a pstack skill. They queue deferrable work that runs unattended when the server grants off-peak compute, at no plan-quota cost. There is no guaranteed start time, so the work runs when the plan has spare capacity. That suits work which can wait, such as a big refactor, an eval sweep, or a docs regeneration. When timing matters, the scheduled automation is the tool, because a Cron automation fires on its schedule.
+
 Next: [Steer with principle names](./08-principles.md).

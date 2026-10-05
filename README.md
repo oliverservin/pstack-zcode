@@ -28,6 +28,8 @@ this repository doubles as a ZCode marketplace. in ZCode:
 - **bun**: runs the scripts under `skills/poteto-mode/scripts/` (`orch`, `watch-pr`). `bun install && bun test` in that directory verifies them.
 - **gt** (Graphite CLI): only the stacked-PR playbooks (`shipping`, `autopilot-stack`, `orchestrate`) need it. install it with `brew install withgraphite/tap/graphite`, then authenticate with `gt auth`. without `gt` those playbooks are inert. everything else works.
 
+pstack also ships one hook. it's a PreToolUse reminder that fires on `git commit` and injects a one-line prompt to run the unslop pass over the diff and your reply before committing. it never blocks. installing pstack auto-enables ZCode's hook runner, because plugin hooks do that. to remove it, disable the plugin or delete `hooks/hooks.json` in the installed copy.
+
 ## get started
 
 two steps:

@@ -16,7 +16,7 @@ Invoke when the user says "reflect" or "/reflect". Skip when the conversation is
 
 ### 1. Locate the active transcript
 
-The parent finds its own transcript file before fanning out. Prefer a transcript directory inside the active workspace if one exists. Otherwise look under `~/.zcode/cli/` for the current session's rollout files. Do not glob across other workspaces' session directories. That crosses workspace boundaries and reads private chats from unrelated projects.
+The parent finds its own transcript file before fanning out. Prefer a transcript directory inside the active workspace if one exists. Otherwise look under `~/.zcode/cli/` for the current session's rollout files. Do not glob across other workspaces' session directories. That crosses workspace boundaries and reads private chats from unrelated projects. For a cited prior session id, prefer the `ReadSessionContext` tool with a focused query over reading the rollout file.
 
 ```bash
 ls -t <agent-transcripts>/*.jsonl <agent-transcripts>/*/*.jsonl <agent-transcripts>/*/subagents/*.jsonl 2>/dev/null | head -10

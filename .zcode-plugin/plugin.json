@@ -19,5 +19,6 @@
 		"unslop"
 	],
 	"skills": "./skills/",
-	"agents": "./agents/"
+	"agents": "./agents/",
+	"hooks": "hooks/"
 }
